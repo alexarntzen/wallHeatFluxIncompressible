@@ -108,13 +108,16 @@ int main(int argc, char *argv[])
 
         gradT=fvc::snGrad(T);
 
-        surfaceScalarField heatFlux =fvc::interpolate(alphaEff*Cp0*rho0)*gradT;
+        tmp<surfaceScalarField> heatFlux =fvc::interpolate(alphaEff*Cp0*rho0)*gradT;
+        tmp<surfaceScalarField> localNusselNum  = fvc::interpolate(alphaEff/(turbulence->nu()/Pr));
 
         const surfaceScalarField::Boundary& patchGradT =
                  gradT.boundaryField();
 
         const surfaceScalarField::Boundary& patchHeatFlux =
-                 heatFlux.boundaryField();
+                heatFlux->boundaryField();
+        const surfaceScalarField::Boundary& patchLocalNusselNum =
+                localNusselNum->boundaryField();
 
         Info<< "\nWall heat fluxes " << endl;
         forAll(patchHeatFlux, patchi)
@@ -159,7 +162,7 @@ int main(int argc, char *argv[])
                 mesh
             ),
             mesh,
-            dimensionedScalar("wallHeatFlux", heatFlux.dimensions(), 0.0)
+            dimensionedScalar("wallHeatFlux", heatFlux->dimensions(), 0.0)
         );
 
       volScalarField wallGradT
@@ -173,6 +176,18 @@ int main(int argc, char *argv[])
             mesh,
             dimensionedScalar("wallGradT", gradT.dimensions(), 0.0)
         );
+        volScalarField wallLocalNusselNum
+        (
+            IOobject
+            (
+                "localNusselNum",
+                runTime.timeName(),
+                mesh
+            ),
+            mesh,
+            dimensionedScalar("localNusselNum", localNusselNum->dimensions(), 0.0)
+        );
+
 
       forAll(wallHeatFlux.boundaryField(), patchi)
       {
@@ -184,11 +199,17 @@ int main(int argc, char *argv[])
          wallGradT.boundaryFieldRef()[patchi] = patchGradT[patchi];
       }
 
+      forAll(wallLocalNusselNum.boundaryField(), patchi)
+      {
+         wallLocalNusselNum.boundaryFieldRef()[patchi] = patchLocalNusselNum[patchi];
+      }
+
 
       wallGradT.write();
       gradT.write();
       wallHeatFlux.write();
       alphaEff.write();
+      wallLocalNusselNum.write();
     }
 
     Info<< "End" << endl;
