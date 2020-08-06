@@ -1,6 +1,10 @@
 wallHeatFluxIncompressible
 ==========================
 
+Modified to work with openFOAM v1912. Running wallHeatFluxIncompressible will calculate an approximation of the wallHeatFlux at wall patches.
+
+
+
 Utility originally by the forum member Eelco van Vliet, for OpenFOAM 2.1.0: http://www.cfd-online.com/Forums/openfoam-post-processing/101972-wallheatflux-utility-incompressible-case.html#post368330
 
 It's the one provided in the branch `OF21x`.
